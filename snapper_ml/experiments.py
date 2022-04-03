@@ -152,8 +152,10 @@ def _run_group(func: Callable,
         data = data_loader_func()
         data_object_id = ray.put(data)
 
-    remote_func = ray.remote(num_cpus=config.resources_per_worker.cpu,
-                             num_gpus=config.resources_per_worker.gpu)(_run_group_remote)
+    remote_func = ray.remote(
+        num_cpus=config.resources_per_worker.cpu,
+        num_gpus=config.resources_per_worker.gpu
+    )(_run_group_remote)
 
     study = create_optuna_study(config, settings)
 

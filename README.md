@@ -4,43 +4,33 @@
 
 ![](docs/assets/banner.png)
 
-SnapperML is a framework for experiment tracking and machine learning operationalization that combines existent and well-supported technologies. These technologies include Docker, [Mlflow](https://mlflow.org/), [Ray](https://github.com/ray-project/ray/), among others.
+SnapperML is a framework for experiment tracking and machine learning operationalization that combines existent and well-supported technologies.
+These technologies include Docker, [Mlflow](https://mlflow.org/), [Ray](https://github.com/ray-project/ray/), among others.
 
-The framework provides an opinionated workflow to design and execute experiments either on a local environment or the cloud. ml-experiment includes:
-- An automatic tracking system
-- First-class support for distributed training and hyperparameter optimization
-- Command Line Interface (CLI) for packaging and running projects inside containers.
+The framework provides an opinionated workflow to design and execute experiments either on a local environment or the cloud. SnapperML includes:
+
+- CLI autogeneration for training scripts
+- Extended tracking capabilities,
+  - Automatic tracking of hyperparameters and cli arguments
+  - Log and traceback collection 
+  - Track basic running operating system specs
+- Easy distributed training and hyperparameter optimization with Ray
+- Command Line Interface (CLI) for packaging and running projects inside docker containers.
+- GitOps-friendly experiment configuration based on YAML/JSON files
 
 ## How to install?
 
-The project has some core dependencies:
-
-- mlflow
-- optuna>=1.1.0
-- ray>=0.8.2
-- docker>=4.1.0
-
-The python package can be install using **pip**:
+SnapperML requires Python>=3.7. The python package can be installed using **pip**:
 
 ```
 pip install snapper-ml
 ```
-Please note that ray is not available for newer Python versions (3.9). In order to configure this, you have to install a previous version and configure it. For a Linux system (Fedora) you would have to do:
+
+Ray support for distributed execution can be installed using the following
 
 ```
-# install python 3.7
-sudo dnf install python3.7
-# configure the system to use python 3.7
-sudo update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.9 1
-sudo update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.7 2
-# here select 3.7 version
-sudo alternatives --config python3 
-# make pip available to be used by python 3.7
-python -m ensurepip --default-pip
-# Install SnapperML
-pip install snapper-ml
+pip install snapper-ml[ray]
 ```
-WARNING: while chaging the default interpreter to python3.7 some of the native functions of the system might not operate properly.
 
 ## Architecture
 
