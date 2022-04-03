@@ -4,19 +4,23 @@ This module is for logging utility functions.
 import logging
 import os
 import coloredlogs
+from snapper_ml.config.models import Settings
 
 
 logger = logging.getLogger(__name__)
 
 
-def setup_logging(experiment_name):
+def setup_logging(experiment_name, settings: Settings = Settings()):
     global logger
     logger = logging.getLogger(__name__)
-    logs_folder = os.environ.get('LOGS_FOLDER', './logs')
-    if not os.path.exists(logs_folder):
-        os.mkdir(logs_folder)
-    info_handler = logging.FileHandler(os.path.join('logs', f'{experiment_name}.info.log'))
-    error_handler = logging.FileHandler(os.path.join('logs', f'{experiment_name}.error.log'))
+
+    if not os.path.exists(settings.SNAPPER_ML_LOGS_FOLDER):
+        os.mkdir(settings.SNAPPER_ML_LOGS_FOLDER)
+
+    info_handler = logging.FileHandler(
+        os.path.join(settings.SNAPPER_ML_LOGS_FOLDER, f'{experiment_name}.info.log'))
+    error_handler = logging.FileHandler(
+        os.path.join(settings.SNAPPER_ML_LOGS_FOLDER, f'{experiment_name}.error.log'))
     console = logging.StreamHandler()
 
     simple_format = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'

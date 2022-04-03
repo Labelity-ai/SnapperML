@@ -137,6 +137,7 @@ def _run_group(func: Callable,
                callbacks_handler: CallbacksHandler,
                settings: Settings,
                nested_runs: bool,
+               upload_logs: bool,
                **kwargs):
     optimize_metric = config.metric
 
@@ -189,6 +190,10 @@ def _run_group(func: Callable,
             mlflow.end_run(RunStatus.FAILED)
     else:
         callbacks_handler.on_job_end(exception=None)
+
+        if upload_logs:
+            mlflow.log_artifacts(str(settings.SNAPPER_ML_LOGS_FOLDER))
+
         return result
 
 
@@ -264,12 +269,14 @@ def _run_group_remote(func: Callable,
 
 def _run_experiment(func: Callable,
                     config: ExperimentConfig,
+                    settings: Settings,
                     autologging_backends: AutologgingBackendParam,
                     callbacks_handler: CallbacksHandler,
                     data_loader_func: Optional[Callable[[], Any]],
                     log_seeds: bool,
                     log_system_info: bool,
-                    delete_if_failed: bool):
+                    delete_if_failed: bool,
+                    upload_logs: bool):
     mlflow.set_experiment(config.name)
 
     with MlflowRunWithErrorHandling(callbacks_handler, delete_if_failed=delete_if_failed):
@@ -291,6 +298,9 @@ def _run_experiment(func: Callable,
                 metrics, artifacts = _extract_metrics_and_artifacts(result)
                 log_experiment_results(config.params, metrics, artifacts)
                 callbacks_handler.on_info_logged(metrics=metrics, artifacts=artifacts)
+
+        if upload_logs:
+            mlflow.log_artifacts(str(settings.SNAPPER_ML_LOGS_FOLDER))
 
 
 def _run_job(func: Callable, config: JobConfig):
@@ -327,6 +337,7 @@ def job(func: Optional[Callable] = None, *,
         log_seeds: bool = True,
         log_system_info: bool = True,
         delete_if_failed: bool = False,
+        upload_logs: bool = True,
         **kwargs):
     """
     Experiment decorator.
@@ -357,6 +368,7 @@ def job(func: Optional[Callable] = None, *,
     :param log_system_info: Whether or not the system information, CPU, GPU, installed packages..., etc,
            should be logged
     :param delete_if_failed: If true, the experiment information will be removed in case of failure.
+    :param upload_logs: If true, upload logs to MLflow as an artifact
     :return: The wrapped function
     """
     if func is None:
@@ -370,6 +382,7 @@ def job(func: Optional[Callable] = None, *,
                        log_system_info=log_system_info,
                        delete_if_failed=delete_if_failed,
                        nested_runs=nested_runs,
+                       upload_logs=upload_logs,
                        **kwargs)
 
     if isinstance(optimization_metric, str):
@@ -412,11 +425,13 @@ def job(func: Optional[Callable] = None, *,
                            callbacks_handler=callbacks_handler,
                            delete_if_failed=delete_if_failed,
                            data_loader_func=data_loader_func,
+                           upload_logs=upload_logs,
+                           settings=safe_project_settings,
                            log_system_info=log_system_info)
 
         if config.kind == JobTypes.GROUP:
             call_params['nested_runs'] = nested_runs
-            _run_group(settings=safe_project_settings, **call_params)
+            _run_group(**call_params)
         else:
             _job_runner(_run_experiment, config.ray_config, **call_params)
 

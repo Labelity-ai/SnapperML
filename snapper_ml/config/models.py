@@ -1,6 +1,7 @@
 import os
 from enum import Enum
 from typing import *
+from pathlib import Path
 from pydantic import BaseModel, PositiveFloat, DirectoryPath, \
     root_validator, PositiveInt, validator, FilePath, BaseSettings, AnyUrl
 from ..optuna import SAMPLERS, PRUNERS
@@ -10,6 +11,7 @@ from ..optuna.types import ParamDistribution
 class Settings(BaseSettings):
     MLFLOW_TRACKING_URI: AnyUrl
     OPTUNA_STORAGE_URI: Optional[str]
+    SNAPPER_ML_LOGS_FOLDER: DirectoryPath = Path('./logs')
 
 
 class JobTypes(Enum):

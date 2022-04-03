@@ -104,14 +104,11 @@ def _log_system_info():
 
 
 def log_text_file(filename: str, content: str):
-    tempdir = tempfile.mkdtemp()
-    try:
-        filepath = os.path.join(tempdir, filename)
+    with tempfile.TemporaryDirectory() as tmp:
+        filepath = os.path.join(tmp, filename)
         with open(filepath, 'w') as f:
             f.write(content)
         mlflow.log_artifact(filepath)
-    finally:
-        shutil.rmtree(tempdir)
 
 
 def _setup_autologging(target: Callable, backend: AutologgingBackend, log_seeds: bool):
