@@ -17,6 +17,9 @@ from snapper_ml.logging import logger, setup_logging
 from snapper_ml.utils import recursive_map
 
 
+app = typer.Typer()
+
+
 def extract_string_from_docker_log(log):
     return log['stream'].splitlines() if 'stream' in log else []
 
@@ -143,7 +146,11 @@ def validate_existent_file(value: Union[List[Path], Path], extensions: Union[str
     return value[0] if is_singleton else value
 
 
-app = typer.Typer()
+def print_help_and_exit():
+    ctx = click.get_current_context()
+    click.echo(ctx.get_help())
+    ctx.exit()
+
 
 ExistentFile = lambda extension, *args, **kwargs: typer.Argument(
     *args,
@@ -244,12 +251,9 @@ def run(scripts: List[Path] = ExistentFile('.py', None),
     load_dotenv(find_dotenv())
 
     if not scripts and not config_file:
-        ctx = click.get_current_context()
-        click.echo(ctx.get_help())
-        ctx.exit()
+        print_help_and_exit()
 
     if config_file:
-        # TODO: Fix parse when file does not exist
         config = parse_config(config_file, get_validation_model)
         kind = kind or config.kind
         name = name or config.name
@@ -260,7 +264,7 @@ def run(scripts: List[Path] = ExistentFile('.py', None),
             ray_config = {**config.ray_config.dict(), **ray_config}
 
         if config.docker_config:
-            docker_image = docker_image or config.docker_config.dockerfile
+            docker_image = docker_image or config.docker_config.image
             dockerfile = dockerfile or config.docker_config.dockerfile
             docker_context = docker_context or config.docker_config.context
             docker_build_args = {**docker_build_args, **config.docker_config.args}
