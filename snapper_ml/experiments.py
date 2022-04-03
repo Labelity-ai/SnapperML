@@ -136,6 +136,7 @@ def _run_group(func: Callable,
                data_loader_func: Optional[Callable[[], Any]],
                callbacks_handler: CallbacksHandler,
                settings: Settings,
+               nested_runs: bool,
                **kwargs):
     optimize_metric = config.metric
 
@@ -159,6 +160,8 @@ def _run_group(func: Callable,
 
     study = create_optuna_study(config, settings)
 
+    mlflow_run = mlflow.start_run() if nested_runs else None
+
     for i in range(concurrent_workers):
         num_trials = config.num_trials // concurrent_workers
 
@@ -172,13 +175,18 @@ def _run_group(func: Callable,
                                        group_config=new_group_config,
                                        data=data_object_id,
                                        callbacks_handler=callbacks_handler,
+                                       nested_runs=nested_runs,
                                        **kwargs)
         futures.append(object_id)
 
     try:
         result = ray.get(futures)
+        if mlflow_run:
+            mlflow.end_run(RunStatus.FINISHED)
     except Exception as e:
         callbacks_handler.on_job_end(exception=e)
+        if mlflow_run:
+            mlflow.end_run(RunStatus.FAILED)
     else:
         callbacks_handler.on_job_end(exception=None)
         return result
@@ -191,6 +199,7 @@ def _run_group_remote(func: Callable,
                       data: Optional[Any],
                       autologging_backends: AutologgingBackendParam,
                       callbacks_handler: CallbacksHandler,
+                      nested_runs: bool,
                       log_seeds: bool,
                       delete_if_failed: bool,
                       log_system_info: bool):
@@ -205,7 +214,8 @@ def _run_group_remote(func: Callable,
         with MlflowRunWithErrorHandling(callbacks_handler=callbacks_handler,
                                         delete_if_failed=delete_if_failed,
                                         trial=trial,
-                                        run_name=f'Trial {trial.number}') as (run, finish_param):
+                                        run_name=f'Trial {trial.number}',
+                                        nested=nested_runs) as (run, finish_param):
             # Connect mlflow runs with optuna trials
             run_id = run.info.run_id
             finish_param['metric'] = None
@@ -310,6 +320,7 @@ def job(func: Optional[Callable] = None, *,
         optimization_metric: Union[Metric, str, None] = None,
         data_loader_func: Optional[Callable[[], Any]] = None,
         settings: Optional[Settings] = None,
+        nested_runs: bool = True,
         log_seeds: bool = True,
         log_system_info: bool = True,
         delete_if_failed: bool = False,
@@ -337,7 +348,8 @@ def job(func: Optional[Callable] = None, *,
     :param data_loader_func: Custom data loader class (not instance). It is necessary to specify this argument
            when using a DataLoader to share data across multiples processes.
     :param settings: Custom object that overrides environment variables.
-    :param log_seeds: If true, it will log the seed of Numpy, Pytorch, or Python random's generator
+    :param nested_runs: If true, experiment runs belonging to an experiments group will be grouped together as nested runs
+    :param log_seeds: If true, it will log the seed of Numpy, Pytorch, or Python random generator
            when the corresponding function to set the seed is called. Eg. when calling numpy.random.sed(...)
     :param log_system_info: Whether or not the system information, CPU, GPU, installed packages..., etc,
            should be logged
@@ -399,6 +411,7 @@ def job(func: Optional[Callable] = None, *,
                            log_system_info=log_system_info)
 
         if config.kind == JobTypes.GROUP:
+            call_params['nested_runs'] = nested_runs
             _run_group(settings=safe_project_settings, **call_params)
         else:
             _job_runner(_run_experiment, config.ray_config, **call_params)
