@@ -5,11 +5,10 @@ import json
 import termcolor
 import ruamel.yaml
 
-
-from ..logging import logger
+from snapper_ml.logging import logger
 from typing import Callable, Type, TypeVar, Union
 from pydantic import BaseModel, ValidationError
-from .models import JobConfig, JobTypes, GroupConfig, ExperimentConfig
+from snapper_ml.config.models import JobConfig, JobTypes, GroupConfig, ExperimentConfig
 
 
 T = TypeVar('T', bound=BaseModel)

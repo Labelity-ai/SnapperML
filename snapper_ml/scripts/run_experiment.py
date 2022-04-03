@@ -108,14 +108,18 @@ def validate_dict(value: str) -> dict:
 
 
 def validate_file_or_dict(value: Union[dict, str]) -> dict:
-    if isinstance(value, dict):
+    if value == '{}':
+        return {}
+    elif isinstance(value, dict):
         return value
+
     try:
         if os.path.isfile(value):
             return parse_config(value)
         else:
             return validate_dict(value)
-    except Exception:
+    except Exception as e:
+        print(e)
         raise typer.BadParameter('It should be dictionary of the form "k1=v1; k2=v2" or an existent YAML or JSON file')
 
 

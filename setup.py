@@ -24,7 +24,7 @@ setuptools.setup(
     ],
     python_requires='>=3.7',
     install_requires=[
-        'docker>=4.1.0',
+        'docker>=4.0.0',
         'EasyProcess>=0.2.10',
         'mlflow>=1.11.0',
         'gorilla>=0.3.0',
@@ -33,14 +33,15 @@ setuptools.setup(
         'pydantic>=1.4',
         'python-dotenv>=0.10.3',
         'ray>=0.8.2',
-        'PyYAML>=5.1.2',
+        'ruamel.yaml>=0.16.12',
         'pytictoc>=1.5.0',
-        'coloredlogs>=10.0',
         'py-cpuinfo>=5.0.0',
-        'typer>=0.1.1',
+        'typer',
+        'coloredlogs',
         'pystache',
         'shellingham',
         'colorama',
+        'termcolor',
         'numpy'
     ],
     dependency_links=['https://github.com/SnapperML/knockknock.git@master#egg=knockknock']
