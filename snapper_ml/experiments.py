@@ -280,9 +280,12 @@ def _run_experiment(func: Callable,
             DataLoader.load_data = data_loader_func
 
         results = _run_job(func, config)
+
         if not results:
             return
+
         results = results if isgeneratorfunction(func) else [results]
+
         for result in results:
             if result:
                 metrics, artifacts = _extract_metrics_and_artifacts(result)
@@ -366,6 +369,7 @@ def job(func: Optional[Callable] = None, *,
                        settings=settings,
                        log_system_info=log_system_info,
                        delete_if_failed=delete_if_failed,
+                       nested_runs=nested_runs,
                        **kwargs)
 
     if isinstance(optimization_metric, str):

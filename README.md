@@ -17,8 +17,13 @@ The framework provides an opinionated workflow to design and execute experiments
 - Easy distributed training and hyperparameter optimization with Ray
 - Command Line Interface (CLI) for packaging and running projects inside docker containers.
 - GitOps-friendly experiment configuration based on YAML/JSON files
+- Powerful callback system to notify when training processes change state
 
-## How to install?
+
+## Prerequisites
+
+
+## Installing SnapperML
 
 SnapperML requires Python>=3.7. The python package can be installed using **pip**:
 
@@ -26,27 +31,16 @@ SnapperML requires Python>=3.7. The python package can be installed using **pip*
 pip install snapper-ml
 ```
 
-Ray support for distributed execution can be installed using the following
+Ray support for distributed execution can be installed using the following command:
 
 ```
 pip install snapper-ml[ray]
 ```
 
-## Architecture
 
-The framework main core is divided into four modules that interact with the user through a Command-Line Interface (CLI) and a Python library.
-The objective of the library is to minimize the code changes required to instrument scripts to be executed by the Job Runner and to provide the abstractions to interact with the Tracking and Hyperparameter Optimization engines. On the other hand, the CLI is in charge of executing scripts either in a local
-environment or a remote environment.
+## Examples
 
-![Architecture Overview](./thesis/source/figures/ml_experiment_overview.svg)
-
-
-## Documentation
-
-The documentation is available [here](https://snapperml.readthedocs.io/en/latest/)
-
-
-## Example
+### Running a simple experiment with enhanced tracking capabilities and automagick CLI creation:
 
 ```python
 # train_svm.py
@@ -71,6 +65,26 @@ if __name__ == '__main__':
 # train_svm.yaml
 
 name: "SVM"
+kind: 'experiment'
+
+parameters:
+  C: 1.0
+  gamma: auto
+
+run:
+  - train_svm.py
+```
+
+```bash
+snapper-ml run --config_file=train_svm.yaml
+```
+
+### Adding hyperparameter optimization using Optuna (requires Ray)
+
+```yaml
+# train_svm_hyperopt.yaml
+
+name: "SVM"
 kind: 'group'
 num_trials: 12
 sampler: TPE
@@ -90,7 +104,6 @@ run:
   - train_svm.py
 ```
 
-```bash
+## Full Documentation
 
-snapper-ml run --config_file=train_svm.yaml
-```
+The documentation is available [here](https://snapperml.readthedocs.io/en/latest/)
